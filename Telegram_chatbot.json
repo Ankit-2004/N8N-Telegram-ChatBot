@@ -1,0 +1,868 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -528,
+        400
+      ],
+      "id": "1d228ac8-792b-4b1e-98f6-c3dee7019381",
+      "name": "Telegram Trigger",
+      "webhookId": "cc32a150-9eac-4b91-82e1-119dee36e216",
+      "credentials": {
+        "telegramApi": {
+          "id": "PTZDFaTqEDkqiTUB",
+          "name": "assignment evaluator"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.document.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "601f9471-02af-41b0-9116-f83bcdf76cc1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "file"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1c7da3de-6215-4b48-8c36-87880063414c",
+                    "leftValue": "={{ $json.message.photo[$json.message.photo.length - 1]?.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fff27cee-a302-470f-ace7-ea594c07ec00",
+                    "leftValue": "={{ $json.message.voice.file_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "voice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1e0a14c9-eaa6-4a77-9655-5d68f1b22733",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -256,
+        384
+      ],
+      "id": "8279a0c2-ac4f-402e-8b2b-b6a477d6a69a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $input.first().json.output;\nreturn {\n  json: {\n    output: content\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        -64
+      ],
+      "id": "4e01954a-2da5-4aec-9d2a-227419bff12b",
+      "name": "Format transform "
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "operation": "create",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "name": "File Assistant",
+        "instructions": "=read the file",
+        "knowledgeRetrieval": true,
+        "file_ids": "={{ $json.id }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        480,
+        208
+      ],
+      "id": "5ba5a2b0-82a8-4381-857f-296deb288931",
+      "name": "Create an assistant",
+      "credentials": {
+        "openAiApi": {
+          "id": "OQXCjbSmmVfTZi62",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        240,
+        208
+      ],
+      "id": "c7a13406-206b-49db-be10-3c2f4860a6f9",
+      "name": "Upload a file",
+      "credentials": {
+        "openAiApi": {
+          "id": "OQXCjbSmmVfTZi62",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getFile?file_id={{ $json.message.voice.file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        432
+      ],
+      "id": "dd67f6e3-3251-41c8-8d9e-1f45c398ccec",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.telegram.org/file/bot<YOUR_BOT_TOKEN>' + $json.result.file_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        432
+      ],
+      "id": "857f99fe-22af-4ef2-a5aa-b4ab7a2357a7",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        480,
+        432
+      ],
+      "id": "ba6494c7-1abe-4120-8a52-ad8a38e82906",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "OQXCjbSmmVfTZi62",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  message: $input.first().json.text\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        432
+      ],
+      "id": "26266780-5e71-4a19-8a6c-59418e8bd778",
+      "name": "format transform 2"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  message: $input.first().json.message.text\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        640
+      ],
+      "id": "c07dbafa-52b7-4684-8e30-6ee71289d6e0",
+      "name": "format transform 3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "=Your name is Ryuk, an AI Assistant. if the user sends a text message as: {{ $json.message }} , then reply accordingly to user's questions .",
+          "returnIntermediateSteps": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        704,
+        640
+      ],
+      "id": "260f9d92-fde3-446e-ad1b-9eb00fdf8f8b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "MarkdownV2"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1952,
+        432
+      ],
+      "id": "7db546e3-97c3-4d93-8642-35adb0f733c2",
+      "name": "Send a text message",
+      "webhookId": "05898193-f7a9-4f89-b8b7-b297becc42a0",
+      "credentials": {
+        "telegramApi": {
+          "id": "PTZDFaTqEDkqiTUB",
+          "name": "assignment evaluator"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getFile?file_id={{$json[\"message\"][\"photo\"][0][\"file_id\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        -64
+      ],
+      "id": "340bef8e-ea1d-4b00-86fb-44ee2586d9c5",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "url": "={{`https://api.telegram.org/file/bot<YOUR_BOT_TOKEN>` + $(\"HTTP Request2\").item.json.result.file_path}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        -64
+      ],
+      "id": "54634820-a09a-453c-82cc-27d0e81d5bc1",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getFile",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $json.result.file_id }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        -64
+      ],
+      "id": "cab76437-6db3-46b4-b058-f877b01b3cc5",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.result.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        -64
+      ],
+      "id": "5c72a4a1-6736-42d6-bbca-9bc686be71dc",
+      "name": "Get a file",
+      "webhookId": "a47d47d3-ed12-4880-a6ce-858dcee6f6fc",
+      "credentials": {
+        "telegramApi": {
+          "id": "PTZDFaTqEDkqiTUB",
+          "name": "assignment evaluator"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of items) {\n  if (item.binary && item.binary.data) {\n    item.binary.data.mimeType = 'image/png'; // or 'image/jpeg'\n  }\n}\nreturn items;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -64
+      ],
+      "id": "ed08dfe1-a1fe-47d3-8fa5-5b88fd538059",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }} , {{ $json.message }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        800
+      ],
+      "id": "ce575c9b-89ce-4b6e-93f0-6fed5987bfe1",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.document.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        208
+      ],
+      "id": "d0e7b139-62d0-4e84-9cb7-99e2a74226b9",
+      "name": "Get a file1",
+      "webhookId": "a47d47d3-ed12-4880-a6ce-858dcee6f6fc"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Read the image the user sent and describe it.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        1136,
+        -64
+      ],
+      "id": "7a8a1a42-c639-42d1-a923-7f4b2930ac9c",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.from.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        96
+      ],
+      "id": "1c6315ba-026f-4001-bc0e-2ee9f25f436b",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "resource": "assistant",
+        "assistantId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "prompt": "define",
+        "text": "=Describe all the information of the file and try to get the information for the following use questions : {{ $('Telegram Trigger').first().json.message.caption }} and we can pass another agent to handle the task.",
+        "memory": "threadId",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        768,
+        208
+      ],
+      "id": "b608bd6a-d4e1-4101-a363-04a63269d78e",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OQXCjbSmmVfTZi62",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e5908cfc-9687-4c0e-a932-a5a7ef0fa8e5",
+              "name": "output",
+              "value": "={{$json.output.replace(/\\+/g, '\\\\+').replace(/\\./g, '\\\\.').replace(/!/g, '\\\\!').replace(/-/g, '\\\\-')}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        640
+      ],
+      "id": "7dedae4c-f8f8-42b4-95a9-8d8db89860ab",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        96
+      ],
+      "id": "6a7ddd56-1306-420d-8d7e-506905be5bc6",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "OQXCjbSmmVfTZi62",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        816
+      ],
+      "id": "5a821148-cc1e-4663-9274-01554c7c5ea6",
+      "name": "OpenAI Chat Model"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get a file1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "format transform 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an assistant": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "Create an assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "format transform 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format transform 2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format transform 3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format transform ": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file1": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Format transform ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "98955c66-d371-47f7-8c08-cf9430230010",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dbf8844b0ffb2f0a1a0d58a7bf31d9875bd911f7a49d90d732b26fb52cbaa74b"
+  },
+  "id": "iMnUHZ9fhL5niDju",
+  "tags": []
+}
